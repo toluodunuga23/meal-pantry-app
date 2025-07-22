@@ -14,6 +14,120 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+// Meal Pantry App Models
+model Recipe {
+    id           String   @id @default(cuid())
+    name         String
+    description  String?
+    instructions String
+    prepTime     Int // in minutes
+    cookTime     Int // in minutes
+    servings     Int
+    imageUrl     String?
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+
+    createdBy   User   @relation(fields: [createdById], references: [id])
+    createdById String
+
+    ingredients RecipeIngredient[]
+    mealPlans   MealPlan[]
+
+    @@index([name])
+}
+
+model Ingredient {
+    id       String @id @default(cuid())
+    name     String @unique
+    category String
+    unit     String // e.g., "cups", "lbs", "pieces"
+
+    recipeIngredients RecipeIngredient[]
+    pantryItems       PantryItem[]
+    shoppingListItems ShoppingListItem[]
+
+    @@index([name])
+    @@index([category])
+}
+
+model RecipeIngredient {
+    id       String  @id @default(cuid())
+    quantity Float
+    unit     String
+    notes    String?
+
+    recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+    recipeId     String
+    ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+    ingredientId String
+
+    @@unique([recipeId, ingredientId])
+}
+
+model PantryItem {
+    id         String    @id @default(cuid())
+    quantity   Float
+    unit       String
+    expiryDate DateTime?
+    location   String? // e.g., "fridge", "pantry", "freezer"
+    createdAt  DateTime  @default(now())
+    updatedAt  DateTime  @updatedAt
+
+    ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+    ingredientId String
+    user         User       @relation(fields: [userId], references: [id])
+    userId       String
+
+    @@index([userId])
+    @@index([expiryDate])
+}
+
+model ShoppingList {
+    id        String   @id @default(cuid())
+    name      String
+    completed Boolean  @default(false)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    user   User   @relation(fields: [userId], references: [id])
+    userId String
+
+    items ShoppingListItem[]
+
+    @@index([userId])
+}
+
+model ShoppingListItem {
+    id        String  @id @default(cuid())
+    quantity  Float
+    unit      String
+    completed Boolean @default(false)
+    notes     String?
+
+    shoppingList   ShoppingList @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+    shoppingListId String
+    ingredient     Ingredient   @relation(fields: [ingredientId], references: [id])
+    ingredientId   String
+
+    @@unique([shoppingListId, ingredientId])
+}
+
+model MealPlan {
+    id       String   @id @default(cuid())
+    date     DateTime
+    mealType String // "breakfast", "lunch", "dinner", "snack"
+    servings Int      @default(1)
+
+    recipe   Recipe @relation(fields: [recipeId], references: [id])
+    recipeId String
+    user     User   @relation(fields: [userId], references: [id])
+    userId   String
+
+    @@unique([userId, date, mealType, recipeId])
+    @@index([userId, date])
+}
+
+// Original T3 Stack Models (keeping for demo purposes, you can remove Post if not needed)
 model Post {
     id        Int      @id @default(autoincrement())
     name      String
@@ -62,7 +176,15 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
-    posts         Post[]
+
+    // Meal Pantry App Relations
+    recipes       Recipe[]
+    pantryItems   PantryItem[]
+    shoppingLists ShoppingList[]
+    mealPlans     MealPlan[]
+
+    // T3 Stack Demo Relations (remove if not needed)
+    posts Post[]
 }
 
 model VerificationToken {
