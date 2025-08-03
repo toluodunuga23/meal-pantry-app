@@ -9,6 +9,13 @@ const config = {
   reactStrictMode: true,
 
   /**
+   * Configure images for external domains
+   */
+  images: {
+    domains: ['images.unsplash.com'],
+  },
+
+  /**
    * If you are using `appDir` then you must comment the below `i18n` config out.
    *
    * @see https://github.com/vercel/next.js/issues/41980

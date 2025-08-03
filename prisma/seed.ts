@@ -18,123 +18,261 @@ async function main() {
 
   console.log("👤 Created user:", user.name);
 
-  // Create sample ingredients
-  const ingredients = await Promise.all([
+  // Helper function to calculate expiry dates based on ingredient type
+  const getExpiryDate = (
+    purchaseDate: Date,
+    category: string,
+    name: string,
+  ): Date => {
+    const expiry = new Date(purchaseDate);
+
+    switch (category) {
+      case "Protein":
+        if (
+          name.includes("Chicken") ||
+          name.includes("Beef") ||
+          name.includes("Salmon")
+        ) {
+          expiry.setDate(expiry.getDate() + 5); // Fresh meat: 5 days
+        } else if (name === "Eggs") {
+          expiry.setDate(expiry.getDate() + 21); // Eggs: 3 weeks
+        }
+        break;
+      case "Dairy":
+        if (name === "Milk") {
+          expiry.setDate(expiry.getDate() + 7); // Milk: 1 week
+        } else if (name === "Cheese") {
+          expiry.setDate(expiry.getDate() + 14); // Cheese: 2 weeks
+        } else if (name === "Butter") {
+          expiry.setDate(expiry.getDate() + 30); // Butter: 1 month
+        }
+        break;
+      case "Vegetable":
+        if (name === "Spinach") {
+          expiry.setDate(expiry.getDate() + 5); // Leafy greens: 5 days
+        } else if (name === "Bell Pepper" || name === "Tomato") {
+          expiry.setDate(expiry.getDate() + 7); // Fresh peppers/tomatoes: 1 week
+        } else if (name === "Onion" || name === "Potatoes") {
+          expiry.setDate(expiry.getDate() + 21); // Root vegetables: 3 weeks
+        } else if (name === "Carrots") {
+          expiry.setDate(expiry.getDate() + 14); // Carrots: 2 weeks
+        } else if (name === "Garlic") {
+          expiry.setDate(expiry.getDate() + 90); // Garlic: 3 months
+        }
+        break;
+      case "Grain":
+        if (name === "Bread") {
+          expiry.setDate(expiry.getDate() + 5); // Bread: 5 days
+        } else {
+          expiry.setDate(expiry.getDate() + 730); // Dry grains: 2 years
+        }
+        break;
+      case "Oil":
+        expiry.setDate(expiry.getDate() + 365); // Oils: 1 year
+        break;
+      case "Seasoning":
+      case "Herb":
+        expiry.setDate(expiry.getDate() + 1095); // Spices/herbs: 3 years
+        break;
+      default:
+        expiry.setDate(expiry.getDate() + 30); // Default: 1 month
+    }
+
+    return expiry;
+  };
+
+  // Generate realistic purchase dates (within last 2 weeks)
+  const generatePurchaseDate = () => {
+    const now = new Date();
+    const daysAgo = Math.floor(Math.random() * 14); // 0-14 days ago
+    const purchaseDate = new Date(now);
+    purchaseDate.setDate(purchaseDate.getDate() - daysAgo);
+    return purchaseDate;
+  };
+
+  // Create sample ingredients with purchase and expiry dates and images
+  const ingredientData = [
     // Proteins
-    prisma.ingredient.upsert({
-      where: { name: "Chicken Breast" },
-      update: {},
-      create: { name: "Chicken Breast", category: "Protein", unit: "lbs" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Ground Beef" },
-      update: {},
-      create: { name: "Ground Beef", category: "Protein", unit: "lbs" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Salmon Fillet" },
-      update: {},
-      create: { name: "Salmon Fillet", category: "Protein", unit: "pieces" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Eggs" },
-      update: {},
-      create: { name: "Eggs", category: "Protein", unit: "pieces" },
-    }),
+    {
+      name: "Chicken Breast",
+      category: "Protein",
+      unit: "lbs",
+      imageUrl:
+        "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Ground Beef",
+      category: "Protein",
+      unit: "lbs",
+      imageUrl:
+        "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Salmon Fillet",
+      category: "Protein",
+      unit: "pieces",
+      imageUrl:
+        "https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Eggs",
+      category: "Protein",
+      unit: "pieces",
+      imageUrl:
+        "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=400&h=300&fit=crop",
+    },
 
     // Vegetables
-    prisma.ingredient.upsert({
-      where: { name: "Onion" },
-      update: {},
-      create: { name: "Onion", category: "Vegetable", unit: "pieces" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Garlic" },
-      update: {},
-      create: { name: "Garlic", category: "Vegetable", unit: "cloves" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Bell Pepper" },
-      update: {},
-      create: { name: "Bell Pepper", category: "Vegetable", unit: "pieces" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Tomato" },
-      update: {},
-      create: { name: "Tomato", category: "Vegetable", unit: "pieces" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Spinach" },
-      update: {},
-      create: { name: "Spinach", category: "Vegetable", unit: "cups" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Carrots" },
-      update: {},
-      create: { name: "Carrots", category: "Vegetable", unit: "pieces" },
-    }),
+    {
+      name: "Onion",
+      category: "Vegetable",
+      unit: "pieces",
+      imageUrl:
+        "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Garlic",
+      category: "Vegetable",
+      unit: "cloves",
+      imageUrl:
+        "https://images.unsplash.com/photo-1583137635226-2e9787b73834?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Bell Pepper",
+      category: "Vegetable",
+      unit: "pieces",
+      imageUrl:
+        "https://images.unsplash.com/photo-1525607551734-4a5f3dea3794?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Tomato",
+      category: "Vegetable",
+      unit: "pieces",
+      imageUrl:
+        "https://images.unsplash.com/photo-1546470427-e0175d60cd58?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Spinach",
+      category: "Vegetable",
+      unit: "cups",
+      imageUrl:
+        "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Carrots",
+      category: "Vegetable",
+      unit: "pieces",
+      imageUrl:
+        "https://images.unsplash.com/photo-1445282768818-728615cc910a?w=400&h=300&fit=crop",
+    },
 
     // Grains & Starches
-    prisma.ingredient.upsert({
-      where: { name: "Rice" },
-      update: {},
-      create: { name: "Rice", category: "Grain", unit: "cups" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Pasta" },
-      update: {},
-      create: { name: "Pasta", category: "Grain", unit: "cups" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Bread" },
-      update: {},
-      create: { name: "Bread", category: "Grain", unit: "slices" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Potatoes" },
-      update: {},
-      create: { name: "Potatoes", category: "Vegetable", unit: "pieces" },
-    }),
+    {
+      name: "Rice",
+      category: "Grain",
+      unit: "cups",
+      imageUrl:
+        "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Pasta",
+      category: "Grain",
+      unit: "cups",
+      imageUrl:
+        "https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Bread",
+      category: "Grain",
+      unit: "slices",
+      imageUrl:
+        "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Potatoes",
+      category: "Vegetable",
+      unit: "pieces",
+      imageUrl:
+        "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=300&fit=crop",
+    },
 
     // Dairy
-    prisma.ingredient.upsert({
-      where: { name: "Milk" },
-      update: {},
-      create: { name: "Milk", category: "Dairy", unit: "cups" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Cheese" },
-      update: {},
-      create: { name: "Cheese", category: "Dairy", unit: "cups" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Butter" },
-      update: {},
-      create: { name: "Butter", category: "Dairy", unit: "tbsp" },
-    }),
+    {
+      name: "Milk",
+      category: "Dairy",
+      unit: "cups",
+      imageUrl:
+        "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Cheese",
+      category: "Dairy",
+      unit: "cups",
+      imageUrl:
+        "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Butter",
+      category: "Dairy",
+      unit: "tbsp",
+      imageUrl:
+        "https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400&h=300&fit=crop",
+    },
 
     // Pantry Staples
-    prisma.ingredient.upsert({
-      where: { name: "Olive Oil" },
-      update: {},
-      create: { name: "Olive Oil", category: "Oil", unit: "tbsp" },
+    {
+      name: "Olive Oil",
+      category: "Oil",
+      unit: "tbsp",
+      imageUrl:
+        "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Salt",
+      category: "Seasoning",
+      unit: "tsp",
+      imageUrl:
+        "https://images.unsplash.com/photo-1472476443507-c7a5948772fc?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Black Pepper",
+      category: "Seasoning",
+      unit: "tsp",
+      imageUrl:
+        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
+    },
+    {
+      name: "Basil",
+      category: "Herb",
+      unit: "tsp",
+      imageUrl:
+        "https://images.unsplash.com/photo-1618164435735-413d3b066c9a?w=400&h=300&fit=crop",
+    },
+  ];
+
+  const ingredients = await Promise.all(
+    ingredientData.map(async (item) => {
+      const purchaseDate = generatePurchaseDate();
+      const expiryDate = getExpiryDate(purchaseDate, item.category, item.name);
+
+      return prisma.ingredient.upsert({
+        where: { name: item.name },
+        update: {
+          purchaseDate,
+          expiryDate,
+          imageUrl: item.imageUrl,
+        },
+        create: {
+          name: item.name,
+          category: item.category,
+          unit: item.unit,
+          imageUrl: item.imageUrl,
+          purchaseDate,
+          expiryDate,
+        },
+      });
     }),
-    prisma.ingredient.upsert({
-      where: { name: "Salt" },
-      update: {},
-      create: { name: "Salt", category: "Seasoning", unit: "tsp" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Black Pepper" },
-      update: {},
-      create: { name: "Black Pepper", category: "Seasoning", unit: "tsp" },
-    }),
-    prisma.ingredient.upsert({
-      where: { name: "Basil" },
-      update: {},
-      create: { name: "Basil", category: "Herb", unit: "tsp" },
-    }),
-  ]);
+  );
 
   console.log(`🥕 Created ${ingredients.length} ingredients`);
 

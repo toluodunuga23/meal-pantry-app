@@ -51,7 +51,7 @@ export const Header = () => {
               Meals
             </Link>
             <Link
-              href="/create-event"
+              href="/pantry"
               className="text-gray-700 hover:text-blue-600 transition-colors"
             >
               Pantry
@@ -121,7 +121,7 @@ export const Header = () => {
                 Meals
               </Link>
               <Link
-                href="/create-event"
+                href="/pantry"
                 className="text-gray-700 hover:text-blue-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
